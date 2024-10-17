@@ -1,0 +1,15 @@
+.wrapper{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.list{
+    flex: 1;
+}
+.loader{
+    justify-content: center;
+}
+.jokes_list{
+    height: 40vh;
+    overflow-y: auto;
+}
