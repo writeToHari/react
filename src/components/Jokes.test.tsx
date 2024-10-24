@@ -2,8 +2,12 @@
 import React, { act } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import Jokes from "./Jokes";
+import * as ApiCall from "./Fetch_Jokes";
 
 describe("Fetch Joke List", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
   it("should fetch jokes and display them", async () => {
     render(<Jokes />);
     fireEvent.change(screen.getByLabelText(/Jokes/i), {
@@ -11,6 +15,12 @@ describe("Fetch Joke List", () => {
     });
     await act(async () => {
       fireEvent.click(screen.getByText(/Get Jokes/i));
+    });
+
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
     });
 
     await waitFor(() => {
@@ -58,5 +68,80 @@ describe("Fetch Joke List", () => {
         screen.queryByText(/Please enter a number/i)
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("Shows loading indicator when fetching jokes", async () => {
+    render(<Jokes />);
+    fireEvent.change(screen.getByLabelText(/Jokes/i), {
+      target: { value: "2" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Get Jokes/i));
+    });
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole(/progressbar/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it("should handle fetchJokes error correctly", async () => {
+    const fetchJokesSpy = jest
+      .spyOn(ApiCall, "getAPICall")
+      .mockResolvedValueOnce("Falied to fetch jokes. Please try again.");
+
+    render(<Jokes />);
+
+    fireEvent.change(screen.getByLabelText(/Jokes/i), {
+      target: { value: "2" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Get Jokes/i));
+    });
+
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Falied to fetch jokes. Please try again./i)
+      ).toBeInTheDocument();
+    });
+
+    expect(fetchJokesSpy).toHaveBeenCalled();
+  });
+
+  it("should handle Data Not Found", async () => {
+    const fetchJokesSpy = jest
+      .spyOn(ApiCall, "getAPICall")
+      .mockResolvedValueOnce([]);
+
+    render(<Jokes />);
+
+    fireEvent.change(screen.getByLabelText(/Jokes/i), {
+      target: { value: "2" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Get Jokes/i));
+    });
+
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Data Not Found/i)).toBeInTheDocument();
+    });
+
+    expect(fetchJokesSpy).toHaveBeenCalled();
   });
 });
