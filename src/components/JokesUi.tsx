@@ -71,7 +71,7 @@ function JokesUi(props: any) {
         <div className="jokes_list">
           {jokes.map((joke: Joke, index: number) => {
             return (
-              <Accordion key={index}>
+              <Accordion id={String(index)}>
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
                   aria-controls="panel1-content"
